@@ -8,9 +8,11 @@ import java.util.List;
 @AllArgsConstructor
 public class OfferFacade {
     private final OfferRepository offerRepository;
+    private final OfferService offerService;
 
     public OfferDto findOfferById(String id) {
-        Offer offerById = offerRepository.findById(id).orElseThrow(() -> new OfferNotFoundException("Offer not found"));
+        Offer offerById = offerRepository.findById(id)
+                .orElseThrow(() -> new OfferNotFoundException("Offer not found"));
         return OfferMapper.mapToDto(offerById);
     }
 
