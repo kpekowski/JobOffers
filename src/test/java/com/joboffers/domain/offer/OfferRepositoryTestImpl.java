@@ -21,6 +21,14 @@ class OfferRepositoryTestImpl implements OfferRepository {
     }
 
     @Override
+    public List<Offer> saveAll(List<Offer> offers) {
+        for(Offer offer : offers) {
+            offerList.put(offer.hash(), offer);
+        }
+        return offers;
+    }
+
+    @Override
     public Offer save(Offer offer) {
         offerList.put(offer.hash(), offer);
         return offer;

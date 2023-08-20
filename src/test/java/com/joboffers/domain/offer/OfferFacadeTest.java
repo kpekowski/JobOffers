@@ -1,5 +1,6 @@
 package com.joboffers.domain.offer;
 
+import com.joboffers.domain.offer.dto.JobOfferResponse;
 import com.joboffers.domain.offer.dto.OfferDto;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +12,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OfferFacadeTest {
     private final OfferRepository offerRepository = new OfferRepositoryTestImpl();
+    private final OfferService offerService = new OfferService(new InMemoryFetcherTestImpl(List.of(
+            new JobOfferResponse("id", "id", "asds", "1"),
+            new JobOfferResponse("assd", "id", "asds", "2"),
+            new JobOfferResponse("asddd", "id", "asds", "3"),
+            new JobOfferResponse("asfd", "id", "asds", "4"),
+            new JobOfferResponse("agsd", "id", "asds", "5"),
+            new JobOfferResponse("adfvsd", "id", "asds", "6")
+    )), offerRepository);
 
     @Test
     public void it_should_find_offer_when_offer_was_saved() {
@@ -24,7 +33,7 @@ class OfferFacadeTest {
                 .url("google.com")
                 .build();
         offerRepository.save(savedOffer);
-        OfferFacade offerFacade = new OfferFacade(offerRepository);
+        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
         //when
         OfferDto offerDtoById = offerFacade.findOfferById(hash);
         //then
@@ -36,7 +45,7 @@ class OfferFacadeTest {
     public void it_should_throw_offer_not_found_exception_when_offer_not_found() {
         //given
         String hash = "001";
-        OfferFacade offerFacade = new OfferFacade(offerRepository);
+        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
         //when
         //then
         assertThrows(OfferNotFoundException.class, () -> offerFacade.findOfferById(hash), "Offer not found");
@@ -61,7 +70,7 @@ class OfferFacadeTest {
                 .salary("random")
                 .url("google.com")
                 .build();
-        OfferFacade offerFacade = new OfferFacade(offerRepository);
+        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
         //when
         //then
         assertThrows(DuplicateKeyException.class, () -> offerFacade.saveOffer(offerToSave), "Offer already exists");
@@ -92,7 +101,7 @@ class OfferFacadeTest {
                         .salary("4000 - 7000 PLN")
                         .url("microsoft.com")
                         .build());
-        OfferFacade offerFacade = new OfferFacade(offerRepository);
+        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
         //when
         List<OfferDto> savedOfferDtos = offerFacade.fetchAllOffersAndSaveAllIfNotExists(offerDtoList);
         //then
@@ -133,7 +142,7 @@ class OfferFacadeTest {
                         .salary("4000 - 7000 PLN")
                         .url("microsoft.com")
                         .build());
-        OfferFacade offerFacade = new OfferFacade(offerRepository);
+        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
         //when
         List<OfferDto> savedOfferDtos = offerFacade.fetchAllOffersAndSaveAllIfNotExists(offerDtoList);
         //then
@@ -157,7 +166,7 @@ class OfferFacadeTest {
     @Test
     public void it_should_return_empty_list_if_there_are_no_offers() {
         //given
-        OfferFacade offerFacade = new OfferFacade(offerRepository);
+        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
         //when
         List<OfferDto> allOffers = offerFacade.findAllOffers();
         //then
