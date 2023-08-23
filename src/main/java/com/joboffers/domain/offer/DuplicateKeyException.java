@@ -14,6 +14,6 @@ public class DuplicateKeyException extends RuntimeException {
 
     public DuplicateKeyException(String message, List<Offer> offers) {
         super(String.format("error" + message + offers.toString()));
-        this.offerUrls = offers.stream().map(Offer::url).toList();
+        this.offerUrls = offers.stream().map(Offer::offerUrl).toList();
     }
 }

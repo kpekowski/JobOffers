@@ -1,175 +1,124 @@
 package com.joboffers.domain.offer;
 
 import com.joboffers.domain.offer.dto.JobOfferResponse;
-import com.joboffers.domain.offer.dto.OfferDto;
+import com.joboffers.domain.offer.dto.OfferRequestDto;
+import com.joboffers.domain.offer.dto.OfferResponseDto;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
-class OfferFacadeTest {
-    private final OfferRepository offerRepository = new OfferRepositoryTestImpl();
-    private final OfferService offerService = new OfferService(new InMemoryFetcherTestImpl(List.of(
-            new JobOfferResponse("id", "id", "asds", "1"),
-            new JobOfferResponse("assd", "id", "asds", "2"),
-            new JobOfferResponse("asddd", "id", "asds", "3"),
-            new JobOfferResponse("asfd", "id", "asds", "4"),
-            new JobOfferResponse("agsd", "id", "asds", "5"),
-            new JobOfferResponse("adfvsd", "id", "asds", "6")
-    )), offerRepository);
+public class OfferFacadeTest {
 
     @Test
-    public void it_should_find_offer_when_offer_was_saved() {
-        //given
-        String hash = "001";
-        Offer savedOffer = Offer.builder()
-                .hash(hash)
-                .title("Junior Java Developer")
-                .company("google")
-                .salary("4000 - 7000 PLN")
-                .url("google.com")
-                .build();
-        offerRepository.save(savedOffer);
-        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
-        //when
-        OfferDto offerDtoById = offerFacade.findOfferById(hash);
-        //then
-        OfferDto expectedOfferDto = OfferMapper.mapToDto(savedOffer);
-        assertThat(offerDtoById).isEqualTo(expectedOfferDto);
+    public void should_fetch_from_jobs_from_remote_and_save_all_offers_when_repository_is_empty() {
+        // given
+        OfferFacade offerFacade = new OfferFacadeTestConfiguration().offerFacadeForTests();
+        assertThat(offerFacade.findAllOffers()).isEmpty();
+
+        // when
+        List<OfferResponseDto> result = offerFacade.fetchAllOffersAndSaveAllIfNotExists();
+
+        // then
+        assertThat(result).hasSize(6);
     }
 
     @Test
-    public void it_should_throw_offer_not_found_exception_when_offer_not_found() {
-        //given
-        String hash = "001";
-        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
-        //when
-        //then
-        assertThrows(OfferNotFoundException.class, () -> offerFacade.findOfferById(hash), "Offer not found");
+    public void should_save_only_2_offers_when_repository_had_4_added_with_offer_urls() {
+        // given
+        OfferFacade offerFacade = new OfferFacadeTestConfiguration(
+                List.of(
+                        new JobOfferResponse("id", "id", "asds", "1"),
+                        new JobOfferResponse("assd", "id", "asds", "2"),
+                        new JobOfferResponse("asddd", "id", "asds", "3"),
+                        new JobOfferResponse("asfd", "id", "asds", "4"),
+                        new JobOfferResponse("Junior", "Comarch", "1000", "https://someurl.pl/5"),
+                        new JobOfferResponse("Mid", "Finanteq", "2000", "https://someother.pl/6")
+                )
+        ).offerFacadeForTests();
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "1"));
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "2"));
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "3"));
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "4"));
+        assertThat(offerFacade.findAllOffers()).hasSize(4);
+
+        // when
+        List<OfferResponseDto> response = offerFacade.fetchAllOffersAndSaveAllIfNotExists();
+
+        // then
+        assertThat(List.of(
+                        response.get(0).offerUrl(),
+                        response.get(1).offerUrl()
+                )
+        ).containsExactlyInAnyOrder("https://someurl.pl/5", "https://someother.pl/6");
     }
 
     @Test
-    public void it_should_throw_duplicate_key_exception_if_offer_with_this_url_already_exists() {
-        //given
-        String hash = "001";
-        Offer alreadyExistingOffer = Offer.builder()
-                .hash(hash)
-                .title("Junior Java Developer")
-                .company("google")
-                .salary("4000 - 7000 PLN")
-                .url("google.com")
-                .build();
-        offerRepository.save(alreadyExistingOffer);
-        OfferDto offerToSave = OfferDto.builder()
-                .hash("random")
-                .title("random")
-                .company("random")
-                .salary("random")
-                .url("google.com")
-                .build();
-        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
-        //when
-        //then
-        assertThrows(DuplicateKeyException.class, () -> offerFacade.saveOffer(offerToSave), "Offer already exists");
+    public void should_save_4_offers_when_there_are_no_offers_in_database() {
+        // given
+        OfferFacade offerFacade = new OfferFacadeTestConfiguration(List.of()).offerFacadeForTests();
+
+        // when
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "1"));
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "2"));
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "3"));
+        offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "4"));
+
+        // then
+        assertThat(offerFacade.findAllOffers()).hasSize(4);
     }
 
     @Test
-    public void it_should_save_all_offers_if_none_of_them_exists() {
-        //given
-        List<OfferDto> offerDtoList = List.of(
-                OfferDto.builder()
-                        .hash("001")
-                        .title("Junior Java Developer")
-                        .company("google")
-                        .salary("4000 - 7000 PLN")
-                        .url("google.com")
-                        .build(),
-                OfferDto.builder()
-                        .hash("002")
-                        .title("Junior Java Developer")
-                        .company("facebook")
-                        .salary("4000 - 7000 PLN")
-                        .url("facebook.com")
-                        .build(),
-                OfferDto.builder()
-                        .hash("003")
-                        .title("Junior Java Developer")
-                        .company("microsoft")
-                        .salary("4000 - 7000 PLN")
-                        .url("microsoft.com")
-                        .build());
-        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
-        //when
-        List<OfferDto> savedOfferDtos = offerFacade.fetchAllOffersAndSaveAllIfNotExists(offerDtoList);
-        //then
-        assertThat(savedOfferDtos).isEqualTo(offerDtoList);
+    public void should_find_offer_by_id_when_offer_was_saved() {
+        // given
+        OfferFacade offerFacade = new OfferFacadeTestConfiguration(List.of()).offerFacadeForTests();
+        OfferResponseDto offerResponseDto = offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "1"));
+        // when
+        OfferResponseDto offerById = offerFacade.findOfferById(offerResponseDto.id());
+
+        // then
+        assertThat(offerById).isEqualTo(OfferResponseDto.builder()
+                .id(offerResponseDto.id())
+                .companyName("id")
+                .position("asds")
+                .salary("asdasd")
+                .offerUrl("1")
+                .build()
+        );
     }
 
     @Test
-    public void it_should_save_only_offers_that_dont_already_exists() {
-        //given
-        Offer savedOffer = Offer.builder()
-                .hash("001")
-                .title("Junior Java Developer")
-                .company("google")
-                .salary("4000 - 7000 PLN")
-                .url("google.com")
-                .build();
-        offerRepository.save(savedOffer);
+    public void should_throw_not_found_exception_when_offer_not_found() {
+        // given
+        OfferFacade offerFacade = new OfferFacadeTestConfiguration(List.of()).offerFacadeForTests();
+        assertThat(offerFacade.findAllOffers()).isEmpty();
 
-        List<OfferDto> offerDtoList = List.of(
-                OfferDto.builder()
-                        .hash("001")
-                        .title("Junior Java Developer")
-                        .company("google")
-                        .salary("4000 - 7000 PLN")
-                        .url("google.com")
-                        .build(),
-                OfferDto.builder()
-                        .hash("002")
-                        .title("Junior Java Developer")
-                        .company("facebook")
-                        .salary("4000 - 7000 PLN")
-                        .url("facebook.com")
-                        .build(),
-                OfferDto.builder()
-                        .hash("003")
-                        .title("Junior Java Developer")
-                        .company("microsoft")
-                        .salary("4000 - 7000 PLN")
-                        .url("microsoft.com")
-                        .build());
-        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
-        //when
-        List<OfferDto> savedOfferDtos = offerFacade.fetchAllOffersAndSaveAllIfNotExists(offerDtoList);
-        //then
-        List<OfferDto> expectedOffers = List.of(OfferDto.builder()
-                        .hash("002")
-                        .title("Junior Java Developer")
-                        .company("facebook")
-                        .salary("4000 - 7000 PLN")
-                        .url("facebook.com")
-                        .build(),
-                OfferDto.builder()
-                        .hash("003")
-                        .title("Junior Java Developer")
-                        .company("microsoft")
-                        .salary("4000 - 7000 PLN")
-                        .url("microsoft.com")
-                        .build());
-        assertThat(savedOfferDtos).isEqualTo(expectedOffers);
+        // when
+        Throwable thrown = catchThrowable(() -> offerFacade.findOfferById("100"));
+
+        // then
+        AssertionsForClassTypes.assertThat(thrown)
+                .isInstanceOf(OfferNotFoundException.class)
+                .hasMessage("Offer with id 100 not found");
     }
 
     @Test
-    public void it_should_return_empty_list_if_there_are_no_offers() {
-        //given
-        OfferFacade offerFacade = new OfferFacade(offerRepository, offerService);
-        //when
-        List<OfferDto> allOffers = offerFacade.findAllOffers();
-        //then
-        assertThat(allOffers).isEqualTo(Collections.EMPTY_LIST);
+    public void should_throw_duplicate_key_exception_when_with_offer_url_exists() {
+        // given
+        OfferFacade offerFacade = new OfferFacadeTestConfiguration(List.of()).offerFacadeForTests();
+        OfferResponseDto offerResponseDto = offerFacade.saveOffer(new OfferRequestDto("id", "asds", "asdasd", "hello.pl"));
+        String savedId = offerResponseDto.id();
+        assertThat(offerFacade.findOfferById(savedId).id()).isEqualTo(savedId);
+        // when
+        Throwable thrown = catchThrowable(() -> offerFacade.saveOffer(
+                new OfferRequestDto("cx", "vc", "xcv", "hello.pl")));
+
+        // then
+        AssertionsForClassTypes.assertThat(thrown)
+                .isInstanceOf(DuplicateKeyException.class)
+                .hasMessage("Offer with offerUrl [hello.pl] already exists");
     }
 }
