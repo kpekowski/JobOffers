@@ -1,0 +1,5 @@
+offer:
+  fetchingOccurrence: PT1S
+
+scheduling:
+  enabled: false

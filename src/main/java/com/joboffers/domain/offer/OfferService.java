@@ -22,8 +22,8 @@ class OfferService {
 
     private List<Offer> filterNotExistingOffers(List<Offer> jobOffers) {
         return jobOffers.stream()
-                .filter(offerDto -> !offerDto.url().isEmpty())
-                .filter(offerDto -> !offerRepository.existsByUrl(offerDto.url()))
+                .filter(offerDto -> !offerDto.offerUrl().isEmpty())
+                .filter(offerDto -> !offerRepository.existsByOfferUrl(offerDto.offerUrl()))
                 .collect(Collectors.toList());
     }
 
