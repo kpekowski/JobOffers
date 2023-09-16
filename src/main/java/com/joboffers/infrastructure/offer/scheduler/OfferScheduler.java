@@ -23,8 +23,8 @@ public class OfferScheduler {
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
     @Scheduled(fixedDelayString = "${offer.fetchingOccurrence}")
-    public List<OfferResponseDto> fetchAllOffersAndSaveAllIfNotExists(){
-        log.info("Started offers fetching {}", dateFormat.format(new Date()));
+    public List<OfferResponseDto> fetchAllOffersAndSaveAllIfNotExists() {
+        log.info(STARTED_OFFERS_FETCHING_MESSAGE, dateFormat.format(new Date()));
         final List<OfferResponseDto> addedOffers = offerFacade.fetchAllOffersAndSaveAllIfNotExists();
         log.info(ADDED_NEW_OFFERS_MESSAGE, addedOffers.size());
         log.info(STOPPED_OFFERS_FETCHING_MESSAGE, dateFormat.format(new Date()));
