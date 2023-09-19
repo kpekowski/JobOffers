@@ -1,27 +1,28 @@
 package com.joboffers.domain.loginandregister;
 
-import com.joboffers.domain.loginandregister.dto.AccountDto;
-import com.joboffers.domain.loginandregister.dto.LoginAndRegisterResponseDto;
+import com.joboffers.domain.loginandregister.dto.RegisterUserDto;
+import com.joboffers.domain.loginandregister.dto.RegistrationResultDto;
+import com.joboffers.domain.loginandregister.dto.UserDto;
 import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.stereotype.Component;
 
 @AllArgsConstructor
+@Component
 public class LoginAndRegisterFacade {
-    private final AccountRepository accountRepository;
+    private final LoginRepository loginRepository;
 
-    public LoginAndRegisterResponseDto register(String username, String password) {
-        if (accountRepository.existsByUsername(username)) {
-            return new LoginAndRegisterResponseDto(null, "User already exists");
-        }
-        Account generatedAccount = Account.builder()
-                .username(username)
-                .password(password)
+    public RegistrationResultDto register(RegisterUserDto registerUserDto) {
+        User user = User.builder()
+                .username(registerUserDto.username())
+                .password(registerUserDto.password())
                 .build();
-        accountRepository.save(generatedAccount);
-        return new LoginAndRegisterResponseDto(AccountMapper.mapToDto(generatedAccount), "User registered successfully");
+        User savedUser = loginRepository.save(user);
+        return new RegistrationResultDto(savedUser.id(), true, savedUser.username());
     }
 
-    public AccountDto findByUsername(String username) {
-        Account accountByUsername = accountRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return AccountMapper.mapToDto(accountByUsername);
+    public UserDto findByUsername(String username) {
+        User accountByUsername = loginRepository.findByUsername(username).orElseThrow(() -> new BadCredentialsException("User not found"));
+        return UserMapper.mapToDto(accountByUsername);
     }
 }

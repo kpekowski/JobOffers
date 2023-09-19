@@ -3,7 +3,7 @@ package com.joboffers.domain.loginandregister.dto;
 import lombok.Builder;
 
 @Builder
-public record AccountDto(
+public record UserDto(
         String username,
         String password) {
 }

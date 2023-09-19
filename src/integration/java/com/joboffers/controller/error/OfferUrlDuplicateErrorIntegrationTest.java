@@ -3,13 +3,13 @@ package com.joboffers.controller.error;
 import com.joboffers.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
-
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,6 +24,7 @@ public class OfferUrlDuplicateErrorIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     public void it_should_return_409_conflict_when_user_try_to_add_offer_with_same_url() throws Exception {
         // step 1
         // given && when
