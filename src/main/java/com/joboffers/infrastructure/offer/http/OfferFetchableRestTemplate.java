@@ -25,7 +25,7 @@ public class OfferFetchableRestTemplate implements OfferFetchable {
         log.info("Started fetching numbers");
         HttpHeaders headers = new HttpHeaders();
         final HttpEntity<HttpHeaders> requestEntity = new HttpEntity<>(headers);
-        try{
+        try {
             String urlForService = getUrlForService("/offers");
             String url = UriComponentsBuilder.fromHttpUrl(urlForService)
                     .toUriString();
@@ -36,7 +36,7 @@ public class OfferFetchableRestTemplate implements OfferFetchable {
                     new ParameterizedTypeReference<>() {
                     });
             final List<JobOfferResponse> body = response.getBody();
-            if(body == null) {
+            if (body == null) {
                 log.info("Response body was null");
                 throw new ResponseStatusException(HttpStatus.NO_CONTENT);
             }

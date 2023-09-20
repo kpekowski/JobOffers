@@ -22,7 +22,6 @@ public class OfferRestController {
     @GetMapping
     public ResponseEntity<List<OfferResponseDto>> findAllOffers() {
         List<OfferResponseDto> allOffers = offerFacade.findAllOffers();
-        log.info(allOffers);
         return ResponseEntity.ok(allOffers);
     }
 
